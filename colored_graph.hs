@@ -67,3 +67,6 @@ color_edge_blue (vs,es) (i,j) = (vertices,edge_set)
   where
     vertices = (take i vs) ++ [vertex_color_blue_update (head (drop i vs)) j] ++ (take (j-i-1) (drop (i) vs)) ++ [vertex_color_blue_update (head (drop j vs)) i] ++ (drop (j+1) vs)
     edge_set  = map (edges vertices) [0..(length vertices)-1]
+
+what_is_edge_color :: Graph -> (Int,Int) -> Edge
+what_is_edge_color (vs,es) e = es !! (edges_to_num e)
