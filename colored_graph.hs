@@ -70,3 +70,7 @@ color_edge_blue (vs,es) (i,j) = (vertices,edge_set)
 
 what_is_edge_color :: Graph -> (Int,Int) -> Edge
 what_is_edge_color (vs,es) e = es !! (edges_to_num e)
+
+row_color :: Graph -> Int -> [Edge]
+row_color gs 1 = [what_is_edge_color gs (0,1)]
+row_color gs n = map (what_is_edge_color gs) (map simple_edges (map (\x -> x+(((n-1)*n) `quot` 2))[0..n-1]))
