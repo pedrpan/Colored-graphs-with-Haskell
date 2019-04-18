@@ -41,8 +41,20 @@ insert :: [Int] -> Int -> [Int]
 insert [] x = [x]
 insert (y:ys) x = if x < y then x : y : ys else y : insert ys x
 
-vertex_color_edge_update :: Vertex -> Int -> Vertex
-vertex_color_edge_update v i = v
+vertex_color_red_update :: Vertex -> Int -> Vertex
+vertex_color_red_update (b,r,u) i = (b,insert r i,filter (/=i) u)
 
-color_edge :: Graph -> Edge -> Graph
-color_edge gs e = gs
+vertex_color_blue_update :: Vertex -> Int -> Vertex
+vertex_color_blue_update (b,r,u) i = (insert b i,r,filter (/=i) u)
+
+color_edge_red :: Graph -> (Int,Int) -> Graph
+color_edge_red (vs,es) (i,j) = (vertices,edge_set)
+  where
+    vertices = (take i vs) ++ [vertex_color_red_update (head (drop i vs)) j] ++ (take (j-i-1) (drop (i) vs)) ++ [vertex_color_red_update (head (drop j vs)) i] ++ (drop j vs)
+    edge_set  = map (edges vertices) [1..length vertices]
+
+color_edge_blue :: Graph -> (Int,Int) -> Graph
+color_edge_blue (vs,es) (i,j) = (vertices,edge_set)
+  where
+    vertices = (take i vs) ++ [vertex_color_blue_update (head (drop i vs)) j] ++ (take (j-i-1) (drop (i) vs)) ++ [vertex_color_blue_update (head (drop j vs)) i] ++ (drop j vs)
+    edge_set  = map (edges vertices) [1..length vertices]
