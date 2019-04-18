@@ -19,14 +19,22 @@ create_vertex_set :: Int -> [Vertex]
 create_vertex_set 2 = [([],[],[1]),([],[],[0])]
 create_vertex_set n = (map add_two_empty (map (append (n-1)) (map getuncolored (create_vertex_set (n-1))))) ++ [(add_two_empty [0..n-2])]
 
-type Edge = (Vertex,Vertex)
+data Edge = Red | Blue | Uncolored
+  deriving (Eq, Ord, Show, Read)
 
 simple_edges :: Int -> (Int,Int)
 simple_edges 0 = (0,1)
 simple_edges n = if  ((snd (simple_edges (n-1))) - (fst (simple_edges (n-1)))) == 1 then (0,(snd (simple_edges (n-1)))+1) else ((fst (simple_edges (n-1))) +1 , snd (simple_edges (n-1)))
 
+is_edge_red :: Vertex -> Int -> Bool
+is_edge_red v i = if (length (filter (== i) (getredlist v))) /= 0 then True else False
+
+is_edge_blue :: Vertex -> Int -> Bool
+is_edge_blue v i = if length ((filter (== i) (getbluelist v))) /= 0 then True else False
+
 edges ::  [Vertex] -> Int -> Edge
-edges vs n = ( vs !! fst (simple_edges n) , vs !! snd (simple_edges n))
+edges vs n = if is_edge_red (vs !! ( fst (simple_edges n))) (snd (simple_edges n)) then Red else
+              if is_edge_blue (vs !! ( fst (simple_edges n))) (snd (simple_edges n)) then Blue else Uncolored
 
 type Graph = ([Vertex],[Edge])
 
@@ -39,22 +47,23 @@ edges_to_num (x,y) = x+ (((y * (y-1))) `div` 2)
 
 insert :: [Int] -> Int -> [Int]
 insert [] x = [x]
-insert (y:ys) x = if x < y then x : y : ys else y : insert ys x
+insert (y:ys) x = if x < y then x : y : ys else
+                    if x == y then y : ys else y : insert ys x
 
 vertex_color_red_update :: Vertex -> Int -> Vertex
-vertex_color_red_update (b,r,u) i = (b,insert r i,filter (/=i) u)
+vertex_color_red_update (r,b,u) i = (insert r i,b,filter (/=i) u)
 
 vertex_color_blue_update :: Vertex -> Int -> Vertex
-vertex_color_blue_update (b,r,u) i = (insert b i,r,filter (/=i) u)
+vertex_color_blue_update (r,b,u) i = (r,insert b i,filter (/=i) u)
 
 color_edge_red :: Graph -> (Int,Int) -> Graph
 color_edge_red (vs,es) (i,j) = (vertices,edge_set)
   where
-    vertices = (take i vs) ++ [vertex_color_red_update (head (drop i vs)) j] ++ (take (j-i-1) (drop (i) vs)) ++ [vertex_color_red_update (head (drop j vs)) i] ++ (drop j vs)
-    edge_set  = map (edges vertices) [1..length vertices]
+    vertices = (take i vs) ++ [vertex_color_red_update (head (drop i vs)) j] ++ (take (j-i-1) (drop (i) vs)) ++ [vertex_color_red_update (head (drop j vs)) i] ++ (drop (j+1) vs)
+    edge_set  = map (edges vertices) [0..(length vertices)-1]
 
 color_edge_blue :: Graph -> (Int,Int) -> Graph
 color_edge_blue (vs,es) (i,j) = (vertices,edge_set)
   where
-    vertices = (take i vs) ++ [vertex_color_blue_update (head (drop i vs)) j] ++ (take (j-i-1) (drop (i) vs)) ++ [vertex_color_blue_update (head (drop j vs)) i] ++ (drop j vs)
-    edge_set  = map (edges vertices) [1..length vertices]
+    vertices = (take i vs) ++ [vertex_color_blue_update (head (drop i vs)) j] ++ (take (j-i-1) (drop (i) vs)) ++ [vertex_color_blue_update (head (drop j vs)) i] ++ (drop (j+1) vs)
+    edge_set  = map (edges vertices) [0..(length vertices)-1]
