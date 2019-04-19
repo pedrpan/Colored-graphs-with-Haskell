@@ -74,3 +74,19 @@ what_is_edge_color (vs,es) e = es !! (edges_to_num e)
 row_color :: Graph -> Int -> [Edge]
 row_color gs 1 = [what_is_edge_color gs (0,1)]
 row_color gs n = map (what_is_edge_color gs) (map simple_edges (map (\x -> x+(((n-1)*n) `quot` 2))[0..n-1]))
+
+color_mapping :: Graph -> Edge -> (Int, Int) -> Graph
+color_mapping gs ed e |  ed == Red = color_edge_red gs e| ed == Blue = color_edge_blue gs e  | otherwise = gs
+
+vert_translator :: [Int] -> (Int,Int) -> (Int,Int)
+vert_translator ls (i,j) = (ls!!i,ls!!j)
+
+convert_vs_to_es :: [Int] -> [(Int,Int)]
+convert_vs_to_es vs = map ( vert_translator vs)  (map simple_edges [0..((((length vs)-1)*(length vs)) `quot`2)-1])
+
+nfold_zipster :: (a->b->c->a)->a->[b]->[c]->a
+nfold_zipster f x [y] [z] = f x y z
+nfold_zipster f x (y:ys) (z:zs) = nfold_zipster f (f x y z) ys zs
+
+imbed_graph_coloring_at_vertices :: Graph -> Graph -> [Int] -> Graph
+imbed_graph_coloring_at_vertices subgs gs ls = nfold_zipster color_mapping gs (snd subgs) (convert_vs_to_es ls)
