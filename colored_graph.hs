@@ -100,4 +100,13 @@ get_edges_at_vertices gs vs = nfold_mapster (\ x y z -> x ++ [what_is_edge_color
 
 subgraph_at_vertices :: Graph -> [Int] -> Graph
 subgraph_at_vertices gs ls = nfold_zipster color_mapping (create_Graph (length ls)) (get_edges_at_vertices gs ls) (convert_vs_to_es [0..((length ls) -1)])
---subgraph_at_vertices gs ls = imbed_graph_coloring_at_vertices ( ) (create_Graph length ls)
+
+is_symmtric :: Graph -> (Int,Int) -> Bool
+is_symmtric gs (i,j) = (vr,vb,vu) == (wr,wb,wu)
+  where
+      vr = filter (/=j) (getredlist   ((fst gs) !! i))
+      vb = filter (/=j) (getbluelist  ((fst gs) !! i))
+      vu = filter (/=j) (getuncolored ((fst gs) !! i))
+      wr = filter (/=i) (getredlist   ((fst gs) !! j))
+      wb = filter (/=i) (getbluelist  ((fst gs) !! j))
+      wu = filter (/=i) (getuncolored ((fst gs) !! j))
