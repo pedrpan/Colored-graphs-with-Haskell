@@ -12,12 +12,11 @@ getuncolored (_,_,x) = x
 append :: Int -> [Int] -> [Int]
 append n x = x ++ [n]
 
-add_two_empty :: [Int] -> Vertex
-add_two_empty x = ([],[],x)
+new_vertex :: Int -> Int -> Vertex
+new_vertex n k = ([],[],[0..k-1]++[k+1..n-1])
 
 create_vertex_set :: Int -> [Vertex]
-create_vertex_set 2 = [([],[],[1]),([],[],[0])]
-create_vertex_set n = (map add_two_empty (map (append (n-1)) (map getuncolored (create_vertex_set (n-1))))) ++ [(add_two_empty [0..n-2])]
+create_vertex_set n = map (new_vertex n) [0..n-1]
 
 data Edge = Red | Blue | Uncolored
   deriving (Eq, Ord, Show, Read)
@@ -84,22 +83,22 @@ vert_translator ls (i,j) = (ls!!i,ls!!j)
 convert_vs_to_es :: [Int] -> [(Int,Int)]
 convert_vs_to_es vs = map ( vert_translator vs)  (map simple_edges [0..((((length vs)-1)*(length vs)) `quot`2)-1])
 
-nfold_zipster :: (a->b->c->a)->a->[b]->[c]->a
-nfold_zipster f x [y] [z] = f x y z
-nfold_zipster f x (y:ys) (z:zs) = nfold_zipster f (f x y z) ys zs
+nfold_zipWith :: (a->b->c->a)->a->[b]->[c]->a
+nfold_zipWith f x [y] [z] = f x y z
+nfold_zipWith f x (y:ys) (z:zs) = nfold_zipWith f (f x y z) ys zs
 
 imbed_graph_coloring_at_vertices :: Graph -> Graph -> [Int] -> Graph
-imbed_graph_coloring_at_vertices subgs gs ls = nfold_zipster color_mapping gs (snd subgs) (convert_vs_to_es ls)
+imbed_graph_coloring_at_vertices subgs gs ls = nfold_zipWith color_mapping gs (snd subgs) (convert_vs_to_es ls)
 
-nfold_mapster :: (a->b->c->a)->a->b->[c]->a
-nfold_mapster f x y [z] = f x y z
-nfold_mapster f x y (z:zs) = nfold_mapster f (f x y z) y zs
+nfold_map :: (a->b->c->a)->a->b->[c]->a
+nfold_map f x y [z] = f x y z
+nfold_map f x y (z:zs) = nfold_map f (f x y z) y zs
 
 get_edges_at_vertices :: Graph -> [Int] -> [Edge]
-get_edges_at_vertices gs vs = nfold_mapster (\ x y z -> x ++ [what_is_edge_color y z]  ) []  gs (convert_vs_to_es vs)
+get_edges_at_vertices gs vs = nfold_map (\ x y z -> x ++ [what_is_edge_color y z]  ) []  gs (convert_vs_to_es vs)
 
 subgraph_at_vertices :: Graph -> [Int] -> Graph
-subgraph_at_vertices gs ls = nfold_zipster color_mapping (create_Graph (length ls)) (get_edges_at_vertices gs ls) (convert_vs_to_es [0..((length ls) -1)])
+subgraph_at_vertices gs ls = nfold_zipWith color_mapping (create_Graph (length ls)) (get_edges_at_vertices gs ls) (convert_vs_to_es [0..((length ls) -1)])
 
 is_symmtric :: Graph -> (Int,Int) -> Bool
 is_symmtric gs (i,j) = (vr,vb,vu) == (wr,wb,wu)
@@ -110,3 +109,6 @@ is_symmtric gs (i,j) = (vr,vb,vu) == (wr,wb,wu)
       wr = filter (/=i) (getredlist   ((fst gs) !! j))
       wb = filter (/=i) (getbluelist  ((fst gs) !! j))
       wu = filter (/=i) (getuncolored ((fst gs) !! j))
+
+find_symmetric_partition :: Graph -> [[Int]] -> [Bool]
+find_symmetric_partition gs ls = map (is_symmtric gs) (convert_vs_to_es [0..((length ls) -1)])
