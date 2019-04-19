@@ -59,13 +59,13 @@ vertex_color_blue_update (r,b,u) i = (r,insert b i,filter (/=i) u)
 color_edge_red :: Graph -> (Int,Int) -> Graph
 color_edge_red (vs,es) (i,j) = (vertices,edge_set)
   where
-    vertices = (take i vs) ++ [vertex_color_red_update (head (drop i vs)) j] ++ (take (j-i-1) (drop (i) vs)) ++ [vertex_color_red_update (head (drop j vs)) i] ++ (drop (j+1) vs)
+    vertices = (take i vs) ++ [vertex_color_red_update (head (drop i vs)) j] ++ (take (j-i-1) (drop (i+1) vs)) ++ [vertex_color_red_update (head (drop j vs)) i] ++ (drop (j+1) vs)
     edge_set  = map (edges vertices) [0..((((length vertices)-1)*(length vertices)) `quot`2)-1]
 
 color_edge_blue :: Graph -> (Int,Int) -> Graph
 color_edge_blue (vs,es) (i,j) = (vertices,edge_set)
   where
-    vertices = (take i vs) ++ [vertex_color_blue_update (head (drop i vs)) j] ++ (take (j-i-1) (drop (i) vs)) ++ [vertex_color_blue_update (head (drop j vs)) i] ++ (drop (j+1) vs)
+    vertices = (take i vs) ++ [vertex_color_blue_update (head (drop i vs)) j] ++ (take (j-i-1) (drop (i+1) vs)) ++ [vertex_color_blue_update (head (drop j vs)) i] ++ (drop (j+1) vs)
     edge_set  = map (edges vertices) [0..((((length vertices)-1)*(length vertices)) `quot`2)-1]
 
 what_is_edge_color :: Graph -> (Int,Int) -> Edge
@@ -90,3 +90,14 @@ nfold_zipster f x (y:ys) (z:zs) = nfold_zipster f (f x y z) ys zs
 
 imbed_graph_coloring_at_vertices :: Graph -> Graph -> [Int] -> Graph
 imbed_graph_coloring_at_vertices subgs gs ls = nfold_zipster color_mapping gs (snd subgs) (convert_vs_to_es ls)
+
+nfold_mapster :: (a->b->c->a)->a->b->[c]->a
+nfold_mapster f x y [z] = f x y z
+nfold_mapster f x y (z:zs) = nfold_mapster f (f x y z) y zs
+
+get_edges_at_vertices :: Graph -> [Int] -> [Edge]
+get_edges_at_vertices gs vs = nfold_mapster (\ x y z -> x ++ [what_is_edge_color y z]  ) []  gs (convert_vs_to_es vs)
+
+subgraph_at_vertices :: Graph -> [Int] -> Graph
+subgraph_at_vertices gs ls = nfold_zipster color_mapping (create_Graph (length ls)) (get_edges_at_vertices gs ls) (convert_vs_to_es [0..((length ls) -1)])
+--subgraph_at_vertices gs ls = imbed_graph_coloring_at_vertices ( ) (create_Graph length ls)
