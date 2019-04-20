@@ -110,5 +110,8 @@ is_symmtric gs (i,j) = (vr,vb,vu) == (wr,wb,wu)
       wb = filter (/=i) (getbluelist  ((fst gs) !! j))
       wu = filter (/=i) (getuncolored ((fst gs) !! j))
 
-find_symmetric_partition :: Graph -> [[Int]] -> [Bool]
-find_symmetric_partition gs ls = map (is_symmtric gs) (convert_vs_to_es [0..((length ls) -1)])
+prin_adj_matrix :: Graph -> IO ()
+prin_adj_matrix gs = mapM_ print (map (row_color gs) [1..(length (fst gs))-1])
+
+is_subset_symmetric :: Graph -> [Int] -> Bool
+is_subset_symmetric gs ls = and (map (is_symmtric gs) (convert_vs_to_es ls))
