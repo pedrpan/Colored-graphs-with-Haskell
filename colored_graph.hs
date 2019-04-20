@@ -6,8 +6,8 @@ getredlist (x,_,_) = x
 getbluelist :: Vertex -> [Int]
 getbluelist (_,x,_) =  x
 
-getuncolored :: Vertex -> [Int]
-getuncolored (_,_,x) = x
+getnone :: Vertex -> [Int]
+getnone (_,_,x) = x
 
 append :: Int -> [Int] -> [Int]
 append n x = x ++ [n]
@@ -18,7 +18,7 @@ new_vertex n k = ([],[],[0..k-1]++[k+1..n-1])
 create_vertex_set :: Int -> [Vertex]
 create_vertex_set n = map (new_vertex n) [0..n-1]
 
-data Edge = Red | Blue | Uncolored
+data Edge = Redd | Blue | None
   deriving (Eq, Ord, Show, Read)
 
 simple_edges :: Int -> (Int,Int)
@@ -32,8 +32,8 @@ is_edge_blue :: Vertex -> Int -> Bool
 is_edge_blue v i = if length ((filter (== i) (getbluelist v))) /= 0 then True else False
 
 edges ::  [Vertex] -> Int -> Edge
-edges vs n = if is_edge_red (vs !! ( fst (simple_edges n))) (snd (simple_edges n)) then Red else
-              if is_edge_blue (vs !! ( fst (simple_edges n))) (snd (simple_edges n)) then Blue else Uncolored
+edges vs n = if is_edge_red (vs !! ( fst (simple_edges n))) (snd (simple_edges n)) then Redd else
+              if is_edge_blue (vs !! ( fst (simple_edges n))) (snd (simple_edges n)) then Blue else None
 
 type Graph = ([Vertex],[Edge])
 
@@ -75,7 +75,7 @@ row_color gs 1 = [what_is_edge_color gs (0,1)]
 row_color gs n = map (what_is_edge_color gs) (map simple_edges (map (\x -> x+(((n-1)*n) `quot` 2))[0..n-1]))
 
 color_mapping :: Graph -> Edge -> (Int, Int) -> Graph
-color_mapping gs ed e |  ed == Red = color_edge_red gs e| ed == Blue = color_edge_blue gs e  | otherwise = gs
+color_mapping gs ed e |  ed == Redd = color_edge_red gs e| ed == Blue = color_edge_blue gs e  | otherwise = gs
 
 vert_translator :: [Int] -> (Int,Int) -> (Int,Int)
 vert_translator ls (i,j) = (ls!!i,ls!!j)
@@ -105,13 +105,30 @@ is_symmtric gs (i,j) = (vr,vb,vu) == (wr,wb,wu)
   where
       vr = filter (/=j) (getredlist   ((fst gs) !! i))
       vb = filter (/=j) (getbluelist  ((fst gs) !! i))
-      vu = filter (/=j) (getuncolored ((fst gs) !! i))
+      vu = filter (/=j) (getnone ((fst gs) !! i))
       wr = filter (/=i) (getredlist   ((fst gs) !! j))
       wb = filter (/=i) (getbluelist  ((fst gs) !! j))
-      wu = filter (/=i) (getuncolored ((fst gs) !! j))
+      wu = filter (/=i) (getnone ((fst gs) !! j))
 
 prin_adj_matrix :: Graph -> IO ()
 prin_adj_matrix gs = mapM_ print (map (row_color gs) [1..(length (fst gs))-1])
 
 is_subset_symmetric :: Graph -> [Int] -> Bool
 is_subset_symmetric gs ls = and (map (is_symmtric gs) (convert_vs_to_es ls))
+
+symmetric_split_left :: Graph -> [Int] -> [Int]
+symmetric_split_left gs [] = []
+symmetric_split_left gs [x] = [x]
+symmetric_split_left gs (x:xs) = [x]++[y | y<-xs, is_symmtric gs (x,y)]
+
+symmetric_split_right :: Graph -> [Int] -> [Int]
+symmetric_split_right gs [] = []
+symmetric_split_right gs [x] = [x]
+symmetric_split_right gs (x:xs) = [y | y<-xs, not (is_symmtric gs (x,y))]
+
+symmetric_partition :: Graph -> [Int] -> [[Int]]
+symmetric_partition gs ls | symmetric_split_left gs ls == ls = [ls]
+                          | otherwise = [symmetric_split_left gs ls] ++ (symmetric_partition gs (symmetric_split_right gs ls))
+
+partition_graph :: Graph -> [[Int]]
+partition_graph gs = symmetric_partition gs [0..(length (fst gs))-1]
