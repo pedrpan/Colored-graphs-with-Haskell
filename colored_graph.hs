@@ -1,3 +1,5 @@
+module Colored_graph where
+
 type Vertex  = ([Int],[Int],[Int])
 
 getredlist :: Vertex -> [Int]
@@ -8,9 +10,6 @@ getbluelist (_,x,_) =  x
 
 getnone :: Vertex -> [Int]
 getnone (_,_,x) = x
-
-append :: Int -> [Int] -> [Int]
-append n x = x ++ [n]
 
 new_vertex :: Int -> Int -> Vertex
 new_vertex n k = ([],[],[0..k-1]++[k+1..n-1])
