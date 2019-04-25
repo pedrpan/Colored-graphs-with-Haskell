@@ -122,7 +122,7 @@ symmetric_split_left gs (x:xs) = [x]++[y | y<-xs, is_symmtric gs (x,y)]
 
 symmetric_split_right :: Graph -> [Int] -> [Int]
 symmetric_split_right gs [] = []
-symmetric_split_right gs [x] = [x]
+symmetric_split_right gs [x] = []
 symmetric_split_right gs (x:xs) = [y | y<-xs, not (is_symmtric gs (x,y))]
 
 symmetric_partition :: Graph -> [Int] -> [[Int]]
