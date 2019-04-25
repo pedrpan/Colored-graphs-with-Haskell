@@ -131,3 +131,24 @@ symmetric_partition gs ls | symmetric_split_left gs ls == ls = [ls]
 
 partition_graph :: Graph -> [[Int]]
 partition_graph gs = symmetric_partition gs [0..(length (fst gs))-1]
+
+replace_x_with_y :: [Int] -> Int -> Int -> [Int]
+replace_x_with_y [] x y = []
+replace_x_with_y (z:zs) x y = if z == x then y : zs else z : replace_x_with_y zs x y
+
+bubbles :: [Int] -> [Int]
+bubbles [] = []
+bubbles [x] = [x]
+bubbles (x:y:zs) = if x < y then x : (bubbles (y:zs)) else y : (bubbles (x:zs))
+
+list_switch_i_with_j :: [Int] -> Int -> Int -> [Int]
+list_switch_i_with_j ls i j = bubbles (replace_x_with_y (replace_x_with_y (replace_x_with_y (replace_x_with_y ls i (-1)) j (-2) ) (-2) i) (-1) j)
+
+vertex_switch_i_with_j :: Int -> Int -> Vertex -> Vertex
+vertex_switch_i_with_j i j (x,y,z) = (list_switch_i_with_j x i j, list_switch_i_with_j y i j, list_switch_i_with_j z i j)
+
+switch_i_with_j :: Graph -> Int -> Int -> Graph
+switch_i_with_j (vs,es) i j = (vertices,edge_set)
+  where
+    vertices = map (vertex_switch_i_with_j i j) (take i vs) ++ [(vertex_switch_i_with_j i j) (head (drop j vs))] ++ map (vertex_switch_i_with_j i j) ((take (j-i-1) (drop (i+1) vs))) ++ [(vertex_switch_i_with_j i j) (head (drop i vs))] ++ map (vertex_switch_i_with_j i j) (drop (j+1) vs)
+    edge_set = map (edges vertices) [0..((((length vertices)-1)*(length vertices)) `quot`2)-1]
